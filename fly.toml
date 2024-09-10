@@ -1,4 +1,4 @@
-app = "wpm-5022"
+app = "wpm-tester"
 primary_region = "sjc"
 kill_signal = "SIGINT"
 kill_timeout = 5
