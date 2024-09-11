@@ -69,7 +69,7 @@ export const links: LinksFunction = () => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	return [
-		{ title: data ? 'WPM Test' : 'Error | WPM Test' },
+		{ title: data ? 'WPM Tester' : 'Error | WPM Tester' },
 		{ name: 'description', content: `Test your typing speed` },
 	]
 }
@@ -204,7 +204,7 @@ function App() {
 				<header className="container py-6">
 					<nav className="flex items-center justify-between">
 						<Link to="/" className="text-2xl font-bold">
-							WPM Test
+							WPM Tester
 						</Link>
 						<div className="flex items-center gap-4">
 							{user ? (
@@ -222,28 +222,10 @@ function App() {
 				<div className="flex-1">
 					<Outlet />
 				</div>
-
-				<div className="container flex justify-between pb-5">
-					<Logo />
-					<ThemeSwitch userPreference={data.requestInfo.userPrefs.theme} />
-				</div>
 			</div>
 			<EpicToaster closeButton position="top-center" theme={theme} />
 			<EpicProgress />
 		</Document>
-	)
-}
-
-function Logo() {
-	return (
-		<Link to="/" className="group grid leading-snug">
-			<span className="font-light transition group-hover:-translate-x-1">
-				epic
-			</span>
-			<span className="font-bold transition group-hover:translate-x-1">
-				notes
-			</span>
-		</Link>
 	)
 }
 

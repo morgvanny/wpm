@@ -2,7 +2,7 @@ import { type MetaFunction } from '@remix-run/node'
 import { Link } from '@remix-run/react'
 import { useOptionalUser } from '#app/utils/user.ts'
 
-export const meta: MetaFunction = () => [{ title: 'WPM Test' }]
+export const meta: MetaFunction = () => [{ title: 'WPM Tester' }]
 
 export default function Index() {
 	const user = useOptionalUser()
@@ -10,7 +10,7 @@ export default function Index() {
 	return (
 		<main className="font-poppins grid h-full place-items-center">
 			<div className="flex flex-col items-center text-center">
-				<h1 className="mb-4 text-4xl font-bold">WPM Test</h1>
+				<h1 className="mb-4 text-4xl font-bold">WPM Tester</h1>
 				<p className="mb-8 text-xl">
 					Test your typing speed and improve your skills!
 				</p>

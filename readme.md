@@ -1,4 +1,4 @@
-# WPM Test
+# WPM Tester
 
 A web application for testing and improving typing speed, built with the
 [Epic Stack](https://github.com/epicweb-dev/epic-stack) by Kent C. Dodds.
@@ -16,10 +16,10 @@ A web application for testing and improving typing speed, built with the
 
 ## Introduction
 
-WPM Test is a modern web application built with the Epic Stack, which provides a
-solid foundation for teams to hit the ground running on their web applications.
-It allows users to test their typing speed, track their progress over time, and
-compete with others.
+WPM Tester is a modern web application built with the Epic Stack, which provides
+a solid foundation for teams to hit the ground running on their web
+applications. It allows users to test their typing speed, track their progress
+over time, and compete with others.
 
 For more information on the Epic Stack, watch
 [Kent's introduction video](https://remix.run/resources/epic-stack) or read the
