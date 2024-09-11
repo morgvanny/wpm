@@ -1,4 +1,4 @@
-app = "wpm-tester"
+app = "wpm-5022"
 primary_region = "lax"
 kill_signal = "SIGINT"
 kill_timeout = 5
