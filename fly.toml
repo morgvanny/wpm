@@ -1,5 +1,5 @@
 app = "wpm-tester"
-primary_region = "sjc"
+primary_region = "lax"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = [ ]
@@ -18,7 +18,7 @@ dockerfile = "/other/Dockerfile"
 ignorefile = "/other/Dockerfile.dockerignore"
 
 [[services]]
-internal_port = 8080
+internal_port = 8_080
 processes = [ "app" ]
 protocol = "tcp"
 script_checks = [ ]

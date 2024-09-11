@@ -1,5 +1,5 @@
 {
-  "name": "wpm-5022",
+  "name": "wpm-tester",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -48,7 +48,7 @@
     "@epic-web/totp": "^1.1.2",
     "@nasa-gcn/remix-seo": "^2.0.1",
     "@paralleldrive/cuid2": "^2.2.2",
-    "@prisma/client": "^5.19.0",
+    "@prisma/client": "^5.17.0",
     "@radix-ui/react-checkbox": "^1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.1",
     "@radix-ui/react-label": "^2.1.0",
@@ -88,6 +88,7 @@
     "litefs-js": "^1.1.2",
     "lru-cache": "^11.0.0",
     "morgan": "^1.10.0",
+    "prisma": "^5.17.0",
     "qrcode": "^1.5.3",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.2.0",
@@ -148,7 +149,6 @@
     "prettier": "^3.3.3",
     "prettier-plugin-sql": "^0.18.1",
     "prettier-plugin-tailwindcss": "^0.6.5",
-    "prisma": "^5.19.0",
     "remix-flat-routes": "^0.6.5",
     "tsx": "^4.16.2",
     "typescript": "^5.5.3",
@@ -156,11 +156,11 @@
     "vitest": "^2.0.3"
   },
   "engines": {
-    "node": "22"
+    "node": "20"
   },
   "epic-stack": {
-    "head": "d3d6103e624fa0b0e131b3d15dfbba9c42ed0d1f",
-    "date": "2024-08-27T15:52:59Z"
+    "head": "f48da107d0161c70272ca069d77ac8ea95cd88bd",
+    "date": "2024-09-10T20:29:25Z"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
