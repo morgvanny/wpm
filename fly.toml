@@ -1,5 +1,5 @@
-app = "wpm-5022"
-primary_region = "lax"
+app = "wpm-tester"
+primary_region = "sjc"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = [ ]
