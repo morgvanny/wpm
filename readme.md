@@ -3,6 +3,8 @@
 A web application for testing and improving typing speed, built with the
 [Epic Stack](https://github.com/epicweb-dev/epic-stack) by Kent C. Dodds.
 
+**Try it out**: [WPM Tester Live Site](https://wpm-tester.morgvanny.com)
+
 ## Table of Contents
 
 - [Introduction](#introduction)
