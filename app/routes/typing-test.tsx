@@ -3,6 +3,12 @@ import { useLoaderData, useFetcher } from '@remix-run/react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
+import React from 'react'
+
+interface TestResult {
+	wpm: number
+	accuracy: number
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
 	const userId = await getUserId(request)
@@ -40,8 +46,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 	const formData = await request.formData()
 	const sessionId = formData.get('sessionId') as string
-	const keystrokes = JSON.parse(formData.get('keystrokes') as string)
-	const testText = formData.get('testText') as string
+	const keystrokes = JSON.parse(formData.get('keystrokes') as string) as any[]
+	const testText = (formData.get('testText') as string) || ''
 	const input = formData.get('input') as string
 
 	const result = validateResult(sessionId, keystrokes, testText, input)
@@ -90,7 +96,7 @@ export default function TypingTest() {
 		sessionId: initialSessionId,
 		recentResults,
 	} = useLoaderData<typeof loader>()
-	const fetcher = useFetcher()
+	const fetcher = useFetcher<TestResult>()
 	const [testText, setTestText] = useState(initialTestText)
 	const [sessionId, setSessionId] = useState(initialSessionId)
 	const [input, setInput] = useState('')
@@ -114,7 +120,7 @@ export default function TypingTest() {
 	)
 
 	const handleKeyDown = useCallback(
-		(e: KeyboardEvent) => {
+		(e: React.KeyboardEvent<HTMLDivElement>) => {
 			// Allow default behavior for special key combinations
 			if (e.metaKey || e.ctrlKey || e.altKey) {
 				return
