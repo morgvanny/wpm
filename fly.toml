@@ -1,5 +1,5 @@
-app = "wpm-tester"
-primary_region = "sjc"
+app = "wpm2-33e5"
+primary_region = "lax"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = [ ]
@@ -18,7 +18,7 @@ dockerfile = "/other/Dockerfile"
 ignorefile = "/other/Dockerfile.dockerignore"
 
 [[services]]
-internal_port = 8080
+internal_port = 8_080
 processes = [ "app" ]
 protocol = "tcp"
 script_checks = [ ]
@@ -54,8 +54,8 @@ script_checks = [ ]
   headers = { }
 
   [[services.http_checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    timeout = "5s"
-    path = "/litefs/health"
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/litefs/health"

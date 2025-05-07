@@ -1,20 +1,10 @@
-import { json, type ActionFunctionArgs } from '@remix-run/node'
-import { useLoaderData, useFetcher } from '@remix-run/react'
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { getUserId } from '#app/utils/auth.server.ts'
+import { useState, useRef, useCallback } from 'react'
+import { requireUserId } from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
-import React from 'react'
+import { type Route } from './+types/typing-test.ts'
 
-interface TestResult {
-	wpm: number
-	accuracy: number
-}
-
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-	const userId = await getUserId(request)
-	if (!userId) {
-		throw new Response('Unauthorized', { status: 401 })
-	}
+export async function loader({ request }: Route.LoaderArgs) {
+	const userId = await requireUserId(request)
 
 	const testTexts = [
 		'The quick brown fox jumps over the lazy dog.',
@@ -31,18 +21,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 		take: 5,
 	})
 
-	return json({
+	return {
 		testText: randomText,
 		sessionId: Date.now().toString(),
 		recentResults,
-	})
+	}
 }
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-	const userId = await getUserId(request)
-	if (!userId) {
-		throw new Response('Unauthorized', { status: 401 })
-	}
+export async function action({ request }: Route.ActionArgs) {
+	const userId = await requireUserId(request)
 
 	const formData = await request.formData()
 	const sessionId = formData.get('sessionId') as string
@@ -63,7 +50,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 		},
 	})
 
-	return json(result)
+	return result
 }
 
 function validateResult(
@@ -90,13 +77,15 @@ function validateResult(
 	return { wpm, accuracy, isValid: true }
 }
 
-export default function TypingTest() {
+export default function TypingTest({
+	loaderData,
+	actionData,
+}: Route.ComponentProps) {
 	const {
 		testText: initialTestText,
 		sessionId: initialSessionId,
 		recentResults,
-	} = useLoaderData<typeof loader>()
-	const fetcher = useFetcher<TestResult>()
+	} = loaderData
 	const [testText, setTestText] = useState(initialTestText)
 	const [sessionId, setSessionId] = useState(initialSessionId)
 	const [input, setInput] = useState('')
@@ -106,17 +95,18 @@ export default function TypingTest() {
 
 	const submitResult = useCallback(
 		(finalInput: string) => {
-			fetcher.submit(
-				{
-					sessionId,
-					keystrokes: JSON.stringify(keystrokes),
-					testText,
-					input: finalInput,
-				},
-				{ method: 'post' },
-			)
+			const formData = new FormData()
+			formData.set('sessionId', sessionId)
+			formData.set('keystrokes', JSON.stringify(keystrokes))
+			formData.set('testText', testText)
+			formData.set('input', finalInput)
+
+			void fetch('/typing-test', {
+				method: 'POST',
+				body: formData,
+			})
 		},
-		[fetcher, sessionId, keystrokes, testText],
+		[sessionId, keystrokes, testText],
 	)
 
 	const handleKeyDown = useCallback(
@@ -158,7 +148,8 @@ export default function TypingTest() {
 		[input, cursorPosition, testText.length, submitResult],
 	)
 
-	useEffect(() => {
+	// Using useCallback for focus instead of useEffect
+	const focusContainer = useCallback(() => {
 		containerRef.current?.focus()
 	}, [])
 
@@ -186,9 +177,8 @@ export default function TypingTest() {
 		setInput('')
 		setKeystrokes([])
 		setCursorPosition(0)
-		fetcher.data = undefined
-		containerRef.current?.focus()
-	}, [initialTestText, containerRef, fetcher])
+		focusContainer()
+	}, [initialTestText, focusContainer])
 
 	const visibleTextStart = Math.max(0, cursorPosition - 20)
 	const visibleTextEnd = Math.min(testText.length, cursorPosition + 20)
@@ -198,11 +188,12 @@ export default function TypingTest() {
 			<h1 className="mb-4 text-2xl font-bold">Typing Speed Test</h1>
 			<div
 				ref={containerRef}
-				className="relative mb-4 h-20 overflow-hidden rounded bg-gray-100 p-2 font-mono text-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+				className="relative mb-4 h-20 overflow-hidden rounded bg-gray-100 p-2 font-mono text-2xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
 				tabIndex={0}
 				onKeyDown={handleKeyDown}
+				onClick={focusContainer}
 			>
-				<div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-pre">
+				<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-pre">
 					{testText
 						.slice(visibleTextStart, visibleTextEnd)
 						.split('')
@@ -223,13 +214,12 @@ export default function TypingTest() {
 						})}
 				</div>
 			</div>
-			{fetcher.data?.wpm !== undefined &&
-				fetcher.data?.accuracy !== undefined && (
-					<div className="mb-4">
-						<p className="text-xl">Your typing speed: {fetcher.data.wpm} WPM</p>
-						<p className="text-xl">Accuracy: {fetcher.data.accuracy}%</p>
-					</div>
-				)}
+			{actionData?.wpm !== undefined && actionData?.accuracy !== undefined && (
+				<div className="mb-4">
+					<p className="text-xl">Your typing speed: {actionData.wpm} WPM</p>
+					<p className="text-xl">Accuracy: {actionData.accuracy}%</p>
+				</div>
+			)}
 			<button
 				onClick={resetTest}
 				className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"

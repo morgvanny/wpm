@@ -23,8 +23,7 @@ CREATE TABLE "Note" (
 CREATE TABLE "NoteImage" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "altText" TEXT,
-    "contentType" TEXT NOT NULL,
-    "blob" BLOB NOT NULL,
+    "objectKey" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     "noteId" TEXT NOT NULL,
@@ -35,8 +34,7 @@ CREATE TABLE "NoteImage" (
 CREATE TABLE "UserImage" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "altText" TEXT,
-    "contentType" TEXT NOT NULL,
-    "blob" BLOB NOT NULL,
+    "objectKey" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     "userId" TEXT NOT NULL,
@@ -106,6 +104,35 @@ CREATE TABLE "Connection" (
 );
 
 -- CreateTable
+CREATE TABLE "Passkey" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "aaguid" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "publicKey" BLOB NOT NULL,
+    "userId" TEXT NOT NULL,
+    "webauthnUserId" TEXT NOT NULL,
+    "counter" BIGINT NOT NULL,
+    "deviceType" TEXT NOT NULL,
+    "backedUp" BOOLEAN NOT NULL,
+    "transports" TEXT,
+    CONSTRAINT "Passkey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "TestResult" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "sessionId" TEXT NOT NULL,
+    "wpm" INTEGER NOT NULL,
+    "accuracy" REAL NOT NULL,
+    "testText" TEXT NOT NULL,
+    "userInput" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "userId" TEXT NOT NULL,
+    CONSTRAINT "TestResult_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "_PermissionToRole" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
@@ -158,6 +185,12 @@ CREATE UNIQUE INDEX "Verification_target_type_key" ON "Verification"("target", "
 CREATE UNIQUE INDEX "Connection_providerName_providerId_key" ON "Connection"("providerName", "providerId");
 
 -- CreateIndex
+CREATE INDEX "Passkey_userId_idx" ON "Passkey"("userId");
+
+-- CreateIndex
+CREATE INDEX "TestResult_userId_idx" ON "TestResult"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "_PermissionToRole_AB_unique" ON "_PermissionToRole"("A", "B");
 
 -- CreateIndex
@@ -172,6 +205,53 @@ CREATE INDEX "_RoleToUser_B_index" ON "_RoleToUser"("B");
 --------------------------------- Manual Seeding --------------------------
 -- Hey there, Kent here! This is how you can reliably seed your database with
 -- some data. You edit the migration.sql file and that will handle it for you.
+
+-- The user Roles and Permissions are seeded here.
+-- If you'd like to customise roles and permissions, you can edit and add the code below to your `prisma/seed.ts` file.
+-- Seed your development database with `npx prisma db seed`
+-- Create a sql dump of your database with `sqlite3 prisma/data.db .dump > seed.sql`
+-- Replace the SQL below with your new Roles & Permissions related SQL from `seed.sql`
+
+-- console.time('🔑 Created permissions...')
+-- const entities = ['user', 'note']
+-- const actions = ['create', 'read', 'update', 'delete']
+-- const accesses = ['own', 'any'] as const
+
+-- let permissionsToCreate = []
+-- for (const entity of entities) {
+-- 	for (const action of actions) {
+-- 		for (const access of accesses) {
+-- 			permissionsToCreate.push({ entity, action, access })
+-- 		}
+-- 	}
+-- }
+-- await prisma.permission.createMany({ data: permissionsToCreate })
+-- console.timeEnd('🔑 Created permissions...')
+
+-- console.time('👑 Created roles...')
+-- await prisma.role.create({
+-- 	data: {
+-- 		name: 'admin',
+-- 		permissions: {
+-- 			connect: await prisma.permission.findMany({
+-- 				select: { id: true },
+-- 				where: { access: 'any' },
+-- 			}),
+-- 		},
+-- 	},
+-- })
+-- await prisma.role.create({
+-- 	data: {
+-- 		name: 'user',
+-- 		permissions: {
+-- 			connect: await prisma.permission.findMany({
+-- 				select: { id: true },
+-- 				where: { access: 'own' },
+-- 			}),
+-- 		},
+-- 	},
+-- })
+-- console.timeEnd('👑 Created roles...')
 
 INSERT INTO Permission VALUES('clnf2zvli0000pcou3zzzzome','create','user','own','',1696625465526,1696625465526);
 INSERT INTO Permission VALUES('clnf2zvll0001pcouly1310ku','create','user','any','',1696625465529,1696625465529);

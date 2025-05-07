@@ -1,21 +1,20 @@
 import { getFormProps, getInputProps, useForm } from '@conform-to/react'
 import { getZodConstraint, parseWithZod } from '@conform-to/zod'
 import { type SEOHandle } from '@nasa-gcn/remix-seo'
-import {
-	json,
-	redirect,
-	type LoaderFunctionArgs,
-	type ActionFunctionArgs,
-} from '@remix-run/node'
-import { Form, Link, useActionData } from '@remix-run/react'
+import { data, redirect, Form, Link } from 'react-router'
 import { ErrorList, Field } from '#app/components/forms.tsx'
 import { Button } from '#app/components/ui/button.tsx'
 import { Icon } from '#app/components/ui/icon.tsx'
 import { StatusButton } from '#app/components/ui/status-button.tsx'
-import { getPasswordHash, requireUserId } from '#app/utils/auth.server.ts'
+import {
+	checkIsCommonPassword,
+	getPasswordHash,
+	requireUserId,
+} from '#app/utils/auth.server.ts'
 import { prisma } from '#app/utils/db.server.ts'
 import { useIsPending } from '#app/utils/misc.tsx'
 import { PasswordAndConfirmPasswordSchema } from '#app/utils/user-validation.ts'
+import { type Route } from './+types/profile.password_.create.ts'
 import { type BreadcrumbHandle } from './profile.tsx'
 
 export const handle: BreadcrumbHandle & SEOHandle = {
@@ -35,22 +34,31 @@ async function requireNoPassword(userId: string) {
 	}
 }
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request }: Route.LoaderArgs) {
 	const userId = await requireUserId(request)
 	await requireNoPassword(userId)
-	return json({})
+	return {}
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request }: Route.ActionArgs) {
 	const userId = await requireUserId(request)
 	await requireNoPassword(userId)
 	const formData = await request.formData()
 	const submission = await parseWithZod(formData, {
 		async: true,
-		schema: CreatePasswordForm,
+		schema: CreatePasswordForm.superRefine(async ({ password }, ctx) => {
+			const isCommonPassword = await checkIsCommonPassword(password)
+			if (isCommonPassword) {
+				ctx.addIssue({
+					path: ['password'],
+					code: 'custom',
+					message: 'Password is too common',
+				})
+			}
+		}),
 	})
 	if (submission.status !== 'success') {
-		return json(
+		return data(
 			{
 				result: submission.reply({
 					hideFields: ['password', 'confirmPassword'],
@@ -77,8 +85,9 @@ export async function action({ request }: ActionFunctionArgs) {
 	return redirect(`/settings/profile`, { status: 302 })
 }
 
-export default function CreatePasswordRoute() {
-	const actionData = useActionData<typeof action>()
+export default function CreatePasswordRoute({
+	actionData,
+}: Route.ComponentProps) {
 	const isPending = useIsPending()
 
 	const [form, fields] = useForm({

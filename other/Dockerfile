@@ -1,7 +1,7 @@
 # This file is moved to the root directory before building the image
 
 # base node image
-FROM node:20-bookworm-slim as base
+FROM node:22-bookworm-slim as base
 
 # set for base and all layer that inherit from it
 ENV NODE_ENV production
@@ -15,7 +15,7 @@ FROM base as deps
 WORKDIR /myapp
 
 ADD package.json package-lock.json .npmrc ./
-RUN npm install --include=dev
+RUN npm ci --include=dev
 
 # Setup production node_modules
 FROM base as production-deps
@@ -69,6 +69,8 @@ ENV PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK = "1"
 
 # add shortcut for connecting to database CLI
 RUN echo "#!/bin/sh\nset -x\nsqlite3 \$DATABASE_URL" > /usr/local/bin/database-cli && chmod +x /usr/local/bin/database-cli
+# and one for the cache database
+RUN echo "#!/bin/sh\nset -x\nsqlite3 \$CACHE_DATABASE_URL" > /usr/local/bin/cache-database-cli && chmod +x /usr/local/bin/cache-database-cli
 
 WORKDIR /myapp
 

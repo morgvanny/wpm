@@ -1,7 +1,7 @@
 node_modules
 .DS_store
+
 /build
-/public/build
 /server-build
 .env
 .cache
@@ -14,6 +14,8 @@ node_modules
 /playwright-report/
 /playwright/.cache/
 /tests/fixtures/email/
+/tests/fixtures/uploaded/
+/tests/fixtures/openimg/
 /coverage
 
 /other/cache.db
@@ -23,3 +25,4 @@ node_modules
 
 # generated files
 /app/components/ui/icons
+.react-router/

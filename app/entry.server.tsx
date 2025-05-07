@@ -1,35 +1,34 @@
+import crypto from 'node:crypto'
 import { PassThrough } from 'node:stream'
+import { styleText } from 'node:util'
+import { contentSecurity } from '@nichtsam/helmet/content'
+import { createReadableStreamFromReadable } from '@react-router/node'
+import * as Sentry from '@sentry/react-router'
+import { isbot } from 'isbot'
+import { renderToPipeableStream } from 'react-dom/server'
 import {
-	createReadableStreamFromReadable,
+	ServerRouter,
 	type LoaderFunctionArgs,
 	type ActionFunctionArgs,
 	type HandleDocumentRequestFunction,
-} from '@remix-run/node'
-import { RemixServer } from '@remix-run/react'
-import * as Sentry from '@sentry/remix'
-import chalk from 'chalk'
-import { isbot } from 'isbot'
-import { renderToPipeableStream } from 'react-dom/server'
+} from 'react-router'
 import { getEnv, init } from './utils/env.server.ts'
 import { getInstanceInfo } from './utils/litefs.server.ts'
 import { NonceProvider } from './utils/nonce-provider.ts'
 import { makeTimings } from './utils/timing.server.ts'
 
-const ABORT_DELAY = 5000
+export const streamTimeout = 5000
 
 init()
 global.ENV = getEnv()
 
+const MODE = process.env.NODE_ENV ?? 'development'
+
 type DocRequestArgs = Parameters<HandleDocumentRequestFunction>
 
 export default async function handleRequest(...args: DocRequestArgs) {
-	const [
-		request,
-		responseStatusCode,
-		responseHeaders,
-		remixContext,
-		loadContext,
-	] = args
+	const [request, responseStatusCode, responseHeaders, reactRouterContext] =
+		args
 	const { currentInstance, primaryInstance } = await getInstanceInfo()
 	responseHeaders.set('fly-region', process.env.FLY_REGION ?? 'unknown')
 	responseHeaders.set('fly-app', process.env.FLY_APP_NAME ?? 'unknown')
@@ -44,7 +43,7 @@ export default async function handleRequest(...args: DocRequestArgs) {
 		? 'onAllReady'
 		: 'onShellReady'
 
-	const nonce = loadContext.cspNonce?.toString() ?? ''
+	const nonce = crypto.randomBytes(16).toString('hex')
 	return new Promise(async (resolve, reject) => {
 		let didError = false
 		// NOTE: this timing will only include things that are rendered in the shell
@@ -53,13 +52,44 @@ export default async function handleRequest(...args: DocRequestArgs) {
 
 		const { pipe, abort } = renderToPipeableStream(
 			<NonceProvider value={nonce}>
-				<RemixServer context={remixContext} url={request.url} />
+				<ServerRouter
+					nonce={nonce}
+					context={reactRouterContext}
+					url={request.url}
+				/>
 			</NonceProvider>,
 			{
 				[callbackName]: () => {
 					const body = new PassThrough()
 					responseHeaders.set('Content-Type', 'text/html')
 					responseHeaders.append('Server-Timing', timings.toString())
+
+					contentSecurity(responseHeaders, {
+						crossOriginEmbedderPolicy: false,
+						contentSecurityPolicy: {
+							// NOTE: Remove reportOnly when you're ready to enforce this CSP
+							reportOnly: true,
+							directives: {
+								fetch: {
+									'connect-src': [
+										MODE === 'development' ? 'ws:' : undefined,
+										process.env.SENTRY_DSN ? '*.sentry.io' : undefined,
+										"'self'",
+									],
+									'font-src': ["'self'"],
+									'frame-src': ["'self'"],
+									'img-src': ["'self'", 'data:'],
+									'script-src': [
+										"'strict-dynamic'",
+										"'self'",
+										`'nonce-${nonce}'`,
+									],
+									'script-src-attr': [`'nonce-${nonce}'`],
+								},
+							},
+						},
+					})
+
 					resolve(
 						new Response(createReadableStreamFromReadable(body), {
 							headers: responseHeaders,
@@ -78,7 +108,7 @@ export default async function handleRequest(...args: DocRequestArgs) {
 			},
 		)
 
-		setTimeout(abort, ABORT_DELAY)
+		setTimeout(abort, streamTimeout + 5000)
 	})
 }
 
@@ -101,16 +131,12 @@ export function handleError(
 	if (request.signal.aborted) {
 		return
 	}
+
 	if (error instanceof Error) {
-		console.error(chalk.red(error.stack))
-		void Sentry.captureRemixServerException(
-			error,
-			'remix.server',
-			request,
-			true,
-		)
+		console.error(styleText('red', String(error.stack)))
 	} else {
-		console.error(chalk.red(error))
-		Sentry.captureException(error)
+		console.error(error)
 	}
+
+	Sentry.captureException(error)
 }

@@ -1,9 +1,16 @@
 import closeWithGrace from 'close-with-grace'
 import { setupServer } from 'msw/node'
 import { handlers as githubHandlers } from './github.ts'
+import { handlers as pwnedPasswordApiHandlers } from './pwned-passwords.ts'
 import { handlers as resendHandlers } from './resend.ts'
+import { handlers as tigrisHandlers } from './tigris.ts'
 
-export const server = setupServer(...resendHandlers, ...githubHandlers)
+export const server = setupServer(
+	...resendHandlers,
+	...githubHandlers,
+	...tigrisHandlers,
+	...pwnedPasswordApiHandlers,
+)
 
 server.listen({
 	onUnhandledRequest(request, print) {
@@ -14,7 +21,6 @@ server.listen({
 		if (request.url.includes('.sentry.io')) {
 			return
 		}
-
 		// Print the regular MSW unhandled request warning otherwise.
 		print.warning()
 	},
