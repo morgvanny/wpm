@@ -120,8 +120,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: prisma/data.db
-          key:
-            db-cache-schema_${{ hashFiles('./prisma/schema.prisma')
+          key: db-cache-schema_${{ hashFiles('./prisma/schema.prisma')
             }}-migrations_${{ hashFiles('./prisma/migrations/*/migration.sql')
             }}
 
@@ -158,8 +157,8 @@ jobs:
         uses: SebRollen/toml-action@v1.2.0
         id: app_name
         with:
-          file: 'fly.toml'
-          field: 'app'
+          file: "fly.toml"
+          field: "app"
 
       - name: 🎈 Setup Fly
         uses: superfly/flyctl-actions/setup-flyctl@1.5
@@ -198,14 +197,14 @@ jobs:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: '50'
+          fetch-depth: "50"
 
       - name: 👀 Read app name
         uses: SebRollen/toml-action@v1.2.0
         id: app_name
         with:
-          file: 'fly.toml'
-          field: 'app'
+          file: "fly.toml"
+          field: "app"
 
       - name: 🎈 Setup Fly
         uses: superfly/flyctl-actions/setup-flyctl@1.5
@@ -213,16 +212,16 @@ jobs:
       - name: 🚀 Deploy Staging
         if: ${{ github.ref == 'refs/heads/dev' }}
         run: |
-          IMAGE="registry.fly.io/${{ steps.app_name.outputs.value }}-staging:${{ github.sha }}"
-          flyctl deploy --image $IMAGE --app ${{ steps.app_name.outputs.value }}-staging
+          flyctl deploy \
+            --image "registry.fly.io/${{ steps.app_name.outputs.value }}-staging:${{ github.sha }}" \
+            --app ${{ steps.app_name.outputs.value }}-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: 🚀 Deploy Production
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
-          IMAGE="registry.fly.io/${{ steps.app_name.outputs.value }}:${{ github.sha }}"
-          flyctl deploy --image $IMAGE \
-            --build-secret SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+          flyctl deploy \
+            --image "registry.fly.io/${{ steps.app_name.outputs.value }}:${{ github.sha }}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
