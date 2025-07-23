@@ -116,6 +116,7 @@ export default function UserStats({ loaderData }: Route.ComponentProps) {
 				callbacks: {
 					label: (context: any) => {
 						const result = testResults[context.dataIndex]
+						if (!result) return ''
 						return `WPM: ${result.wpm}, Accuracy: ${result.accuracy}%`
 					},
 				},
